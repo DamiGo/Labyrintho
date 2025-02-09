@@ -1,94 +1,69 @@
 import pygame
 import random
+import time
 from lbo_tree import Tree
 
 # Initialisation de Pygame
 pygame.init()
 
-# Définition des paramètres généraux du labyrinthe
-screen_w = 800
-screen_h = 600
+# Définition des paramètres du labyrinthe
+screen_w, screen_h = 800, 600
+lbo_h, lbo_w = 10, 20  # Taille du labyrinthe
 
-lbo_h=10
 Tree.hauteur = lbo_h
-lbo_w=20
 Tree.largeur = lbo_w
 
-box_h=screen_h//lbo_h
-box_w=screen_w//lbo_w
+box_h = screen_h // lbo_h
+box_w = screen_w // lbo_w
 
-# Définition de la police d’écriture
-pygame.font.init()
-font = pygame.font.Font(None, 12)  # Police par défaut, taille 40
+# Création de la fenêtre
+screen = pygame.display.set_mode((screen_w, screen_h))
+pygame.display.set_caption("Génération du Labyrinthe en Temps Réel")
 
-
-WIDTH, HEIGHT = screen_w, screen_h
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-pygame.display.set_caption("Mon premier jeu grâce à Pygame !")
-
+# Générer une grille d'arbres (labyrinthe vide)
 mylbo = Tree.initialise_arbre(lbo_h, lbo_w)
-mylbo[0][0].isStartLeaf = True
-mylbo[0][0].randomFinalLeaf()
 
-# Définition des couleurs
-WHITE = (255, 255, 255)
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-BLACK = (0, 0, 0)
+# Liste de tous les murs à briser (algorithme de Kruskal)
+walls = []
+for i in range(lbo_h):
+    for j in range(lbo_w):
+        if i < lbo_h - 1:
+            walls.append((i, j, i + 1, j))  # Mur du bas
+        if j < lbo_w - 1:
+            walls.append((i, j, i, j + 1))  # Mur de droite
 
-actual_color = BLUE
-current_pos_x = 0
-current_pos_y = 0
+random.shuffle(walls)  # Mélanger les murs pour un effet aléatoire
 
-lbo_ok = False
+# Boucle de fusion avec affichage progressif
+while Tree.compter_zones_uniques(mylbo) > 1:
+    i1, j1, i2, j2 = walls.pop()  # Sélectionner un mur aléatoire
+    Tree.fusionner_zones(mylbo, i1, j1, i2, j2)
 
-# Boucle principale
+    # 🎨 Dessiner le labyrinthe après chaque fusion
+    screen.fill((255, 255, 255))
+
+    for i in range(lbo_h):
+        for j in range(lbo_w):
+            x, y = j * box_w, i * box_h
+
+            # Mur de droite
+            if mylbo[i][j].rightWall:
+                pygame.draw.line(screen, (0, 0, 0), (x + box_w, y), (x + box_w, y + box_h), 1)
+
+            # Mur du bas
+            if mylbo[i][j].downWall:
+                pygame.draw.line(screen, (0, 0, 0), (x, y + box_h), (x + box_w, y + box_h), 1)
+
+    pygame.draw.rect(screen, (0, 0, 0), (0, 0, screen_w, screen_h), 1)  # Contour
+
+    pygame.display.flip()  # Mettre à jour l'affichage
+    pygame.time.delay(30)  # 🎯 Ajuste la vitesse de génération (réglable)
+
+# Boucle principale de jeu après la génération
 running = True
 while running:
-    screen.fill(WHITE)  # Remplit l'écran en blanc
-
-    if not lbo_ok:
-        nodepath = random.randint(0,Tree.hauteur*Tree.largeur-1)
-        mylbo[nodepath//Tree.largeur][nodepath % Tree.largeur].clearOneWall()
-        mylbo[0][0].colorie()
-        if(Tree.compter_zones_uniques(mylbo) == 1):
-            lbo_ok = True
-        else:
-            print("il reste ce nombre de zone : ", Tree.compter_zones_uniques(mylbo))
-
-    # Gestion des événements
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-    #Contour du labyrinthe
-    pygame.draw.rect(screen, BLACK, (0, 0, WIDTH, HEIGHT),1)
-    # Dessiner le point de départ (0,0 par défaut)
-    for i in range(0,lbo_h,1):
-        for j in range(0,lbo_w,1):
-            #Mur de droite
-            if(mylbo[i][j].rightWall):
-                pygame.draw.line(screen, BLACK, (current_pos_x+box_w, current_pos_y),(current_pos_x+box_w, current_pos_y+box_h),1)
 
-            #Mur du bas
-            if(mylbo[i][j].downWall):
-                pygame.draw.line(screen, BLACK, (current_pos_x, current_pos_y+box_h),(current_pos_x+box_w, current_pos_y+box_h),1)
-            
-            #Affiche l'identifiant de case
-            text_surface = font.render(str(mylbo[i][j].zoneID), True, BLACK)  # Rendu texte noir
-            text_rect = text_surface.get_rect(center=(current_pos_x + box_w // 2, current_pos_y + box_h // 2))
-            screen.blit(text_surface, text_rect)
-            
-            current_pos_x += box_w
-            actual_color = WHITE
-        current_pos_y += box_h
-        current_pos_x = 0
-    actual_color = BLUE
-    current_pos_x = 0
-    current_pos_y = 0
-    # Mise à jour de l'affichage
-    pygame.display.flip()
-
-# Quitter Pygame
 pygame.quit()
