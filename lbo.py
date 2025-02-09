@@ -16,6 +16,9 @@ Tree.largeur = lbo_w
 box_h = screen_h // lbo_h
 box_w = screen_w // lbo_w
 
+# Définition des couleurs
+WHITE, BLACK, BLUE, RED = (255, 255, 255), (0, 0, 0), (0, 0, 255), (255, 0, 0)
+
 # Création de la fenêtre
 screen = pygame.display.set_mode((screen_w, screen_h))
 pygame.display.set_caption("Génération du Labyrinthe en Temps Réel")
@@ -34,6 +37,8 @@ for i in range(lbo_h):
 
 random.shuffle(walls)  # Mélanger les murs pour un effet aléatoire
 
+mylbo[0][0].randomFinalLeaf()
+
 # Boucle de fusion avec affichage progressif
 while Tree.compter_zones_uniques(mylbo) > 1:
     i1, j1, i2, j2 = walls.pop()  # Sélectionner un mur aléatoire
@@ -45,7 +50,12 @@ while Tree.compter_zones_uniques(mylbo) > 1:
     for i in range(lbo_h):
         for j in range(lbo_w):
             x, y = j * box_w, i * box_h
-
+            #On dessine le départ & l'arrivée
+            if(i==0 and j==0):
+                pygame.draw.rect(screen,BLUE , (0, 0, box_w, box_h))
+            else:
+                if(mylbo[i][j].isFinalLeaf):
+                    pygame.draw.rect(screen,RED , (x, y, x+box_w, y+box_h))
             # Mur de droite
             if mylbo[i][j].rightWall:
                 pygame.draw.line(screen, (0, 0, 0), (x + box_w, y), (x + box_w, y + box_h), 1)

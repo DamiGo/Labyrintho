@@ -11,7 +11,27 @@ class Tree:
         self.right = None
         self.rightWall = True
         self.zoneID = 0
+        self.isFinalLeaf = False
 
+    def randomFinalLeaf(self):
+        """ Désigne une seule case comme feuille finale """
+        if self.down is None and self.right is None:
+            self.isFinalLeaf = True  # ✅ Assigner la fin uniquement si c'est une impasse
+            return  # 🚀 Arrêter la récursion ici
+        
+        # ✅ Parcours une seule branche et empêche les doubles attributions
+        nodepath = random.randint(0, 1)
+        if nodepath == 0 and self.down:
+            self.down.randomFinalLeaf()
+        elif self.right:
+            self.right.randomFinalLeaf()
+
+    def clearOneWall(self):
+        nodepath = random.randint(0, 1)
+        if nodepath == 0 and self.down and self.down.zoneID != self.zoneID:
+            self.downWall = False
+        elif self.right and self.right.zoneID != self.zoneID:
+            self.rightWall = False
     @staticmethod
     def initialise_arbre(hauteur: int, largeur: int):
         """ Initialise une grille d'arbres avec connexions entre cases """
